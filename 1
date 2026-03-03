@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр памяти</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        /* Переключатель режимов (скрывается в дуэльной вкладке) */
+        .mode-switch {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #764ba2;
+            border-color: #764ba2;
+        }
+
+        /* Общие стили */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .setting-item label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .setting-item input, .setting-item select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .grouping-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sequence-area {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 3em;
+            font-weight: bold;
+            font-family: monospace;
+            word-wrap: break-word;
+        }
+
+        /* Крупные таймеры */
+        .timer {
+            font-size: 2em;
+            text-align: center;
+            margin: 15px 0;
+            color: #764ba2;
+            font-weight: bold;
+        }
+
+        .big-timer {
+            font-size: 3em;
+            text-align: center;
+            margin: 20px 0;
+            color: #fff;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .digits-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .digit-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+
+        .digit-input {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 2em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+
+        .digit-input.success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .digit-input.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .hint {
+            font-size: 0.8em;
+            color: #28a745;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .result-table th {
+            background: #764ba2;
+            color: white;
+            padding: 10px;
+        }
+
+        .result-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .result-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* Дуэль */
+        .duel-mode {
+            display: none;
+        }
+
+        .duel-settings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .player-card {
+            flex: 1 1 400px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-card h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #764ba2;
+            padding-bottom: 5px;
+        }
+
+        .player-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .player-time {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-badge {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 30px;
+        }
+
+        .winner {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .loser {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .draw {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Тренажёр памяти</h1>
+
+        <!-- Переключатель режимов (скрывается в дуэльной вкладке) -->
+        <div id="modeSwitch" class="mode-switch">
+            <button class="mode-btn active" id="modeSingleBtn">Одиночный</button>
+            <button class="mode-btn" id="modeDuelBtn">Дуэль</button>
+        </div>
+
+        <!-- ========== ОДИНОЧНЫЙ РЕЖИМ ========== -->
+        <div id="singleMode" class="single-mode">
+            <div class="card">
+                <h2>🧑 Одиночная тренировка</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>👤 Имя попытки</label>
+                        <input type="text" id="singleAttemptName" placeholder="Введите имя">
+                    </div>
+                    <div class="setting-item">
+                        <label>🔢 Количество цифр (1-999)</label>
+                        <input type="number" id="singleDigitCount" min="1" max="999" value="5">
+                    </div>
+                    <div class="setting-item">
+                        <label>⏱ Время запоминания (сек)</label>
+                        <input type="number" id="singleMemTime" min="1" max="300" value="5">
+                    </div>
+                    <div class="setting-item">
+                        <label>⏳ Задержка перед показом (сек)</label>
+                        <input type="number" id="singleDelay" min="0" max="60" value="0">
+                    </div>
+                </div>
+
+                <div class="grouping-block">
+                    <label>📊 Расположение:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="singleGrouping" value="1" checked> По одной</label>
+                        <label><input type="radio" name="singleGrouping" value="2"> По две</label>
+                        <label><input type="radio" name="singleGrouping" value="3"> По три</label>
+                    </div>
+                </div>
+
+                <div class="flex-row">
+                    <button id="singleStartBtn">▶ Начать</button>
+                    <button id="singleReadyBtn" disabled>✋ Готов, ввести ответ</button>
+                </div>
+            </div>
+
+            <!-- Карточки одиночного режима -->
+            <div class="card" id="singleDelayCard" style="display: none;">
+                <h2>Приготовьтесь</h2>
+                <div class="timer" id="singleDelayTimer"></div>
+            </div>
+
+            <div class="card" id="singleMemorizeCard" style="display: none;">
+                <h2>Запоминайте</h2>
+                <div class="sequence-area" id="singleSequence"></div>
+                <div class="timer" id="singleMemTimer"></div>
+            </div>
+
+            <!-- Пауза перед вводом -->
+            <div class="card" id="singlePauseCard" style="display: none;">
+                <h2>Приготовьтесь вспоминать</h2>
+                <div class="timer" id="singlePauseTimer"></div>
+            </div>
+
+            <div class="card" id="singleAnswerCard" style="display: none;">
+                <h2>Введите ответ</h2>
+                <p style="color: #666;">Введите каждую цифру в отдельное поле (можно оставить пустые)</p>
+                <div id="singleDigitsContainer" class="digits-container"></div>
+                <div class="flex-row">
+                    <button id="singleCheckBtn">✅ Проверить</button>
+                    <button id="singleResetBtn">🔄 Новая попытка</button>
+                </div>
+                <div id="singleCheckResult" class="score"></div>
+                <div id="singleErrorMessage" class="error-message"></div>
+            </div>
+
+            <!-- Таблица результатов одиночного режима -->
+            <div class="card">
+                <h2>📋 История одиночных попыток</h2>
+                <table class="result-table" id="singleResultsTable">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Цифр</th>
+                            <th>Группировка</th>
+                            <th>Время (сек)</th>
+                            <th>Баллы</th>
+                            <th>Дата/время</th>
+                        </tr>
+                    </thead>
+                    <tbody id="singleResultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== РЕЖИМ ДУЭЛИ ========== -->
+        <div id="duelMode" class="duel-mode">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+                    <h2>⚔️ Дуэль</h2>
+                    <div>
+                        <button id="duelStartBtn">▶ Начать дуэль</button>
+                        <button id="openDuelTabBtn">🆕 Открыть в новой вкладке</button>
+                    </div>
+                </div>
+
+                <!-- Общие параметры -->
+                <div style="background: #e9ecef; border-radius: 15px; padding: 20px; margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px;">🎮 Общие настройки (задаёт Игрок 1)</h3>
+                    <div class="settings-grid" style="grid-template-columns: repeat(3,1fr);">
+                        <div class="setting-item">
+                            <label>🔢 Количество цифр</label>
+                            <input type="number" id="duelDigitCount" min="1" max="999" value="5">
+                        </div>
+                        <div class="setting-item">
+                            <label>⏱ Время запоминания (сек)</label>
+                            <input type="number" id="duelMemTime" min="1" max="300" value="5">
+                        </div>
+                        <div class="setting-item">
+                            <label>⏳ Задержка перед показом (сек)</label>
+                            <input type="number" id="duelDelay" min="0" max="60" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Два игрока с именами и кнопками стоп -->
+                <div class="duel-settings">
+                    <!-- Игрок 1 -->
+                    <div class="player-card" id="player1Card">
+                        <h3>👤 Игрок 1</h3>
+                        <div class="setting-item" style="margin-bottom: 15px;">
+                            <label>Имя игрока</label>
+                            <input type="text" id="p1Name" placeholder="Введите имя" value="Игрок 1">
+                        </div>
+                        <div class="setting-item">
+                            <label>📊 Группировка (цифр в группе)</label>
+                            <select id="p1Grouping" class="grouping-select">
+                                <option value="1">По одной</option>
+                                <option value="2">По две</option>
+                                <option value="3">По три</option>
+                                <option value="4">По четыре</option>
+                                <option value="5">По пять</option>
+                                <option value="6">По шесть</option>
+                                <option value="7">По семь</option>
+                                <option value="8">По восемь</option>
+                                <option value="9">По девять</option>
+                                <option value="10">По десять</option>
+                            </select>
+                        </div>
+                        <div id="p1Sequence" class="sequence-area" style="display: none;"></div>
+                        <div id="p1DigitsContainer" class="digits-container"></div>
+                        <div class="player-footer">
+                            <span class="player-time" id="p1TimerDisplay"></span>
+                            <span id="p1ResultBadge" class="result-badge"></span>
+                        </div>
+                        <div style="text-align: center;">
+                            <button id="p1StopBtn" style="display: none;" disabled>✋ Стоп запоминание</button>
+                            <button id="p1SubmitBtn" style="display: none;" disabled>✅ Готов</button>
+                        </div>
+                    </div>
+
+                    <!-- Игрок 2 -->
+                    <div class="player-card" id="player2Card">
+                        <h3>👤 Игрок 2</h3>
+                        <div class="setting-item" style="margin-bottom: 15px;">
+                            <label>Имя игрока</label>
+                            <input type="text" id="p2Name" placeholder="Введите имя" value="Игрок 2">
+                        </div>
+                        <div class="setting-item">
+                            <label>📊 Группировка (цифр в группе)</label>
+                            <select id="p2Grouping" class="grouping-select">
+                                <option value="1">По одной</option>
+                                <option value="2">По две</option>
+                                <option value="3">По три</option>
+                                <option value="4">По четыре</option>
+                                <option value="5">По пять</option>
+                                <option value="6">По шесть</option>
+                                <option value="7">По семь</option>
+                                <option value="8">По восемь</option>
+                                <option value="9">По девять</option>
+                                <option value="10">По десять</option>
+                            </select>
+                        </div>
+                        <div id="p2Sequence" class="sequence-area" style="display: none;"></div>
+                        <div id="p2DigitsContainer" class="digits-container"></div>
+                        <div class="player-footer">
+                            <span class="player-time" id="p2TimerDisplay"></span>
+                            <span id="p2ResultBadge" class="result-badge"></span>
+                        </div>
+                        <div style="text-align: center;">
+                            <button id="p2StopBtn" style="display: none;" disabled>✋ Стоп запоминание</button>
+                            <button id="p2SubmitBtn" style="display: none;" disabled>✅ Готов</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таймер паузы перед запоминанием -->
+                <div id="duelDelayTimerContainer" style="text-align: center; margin-top: 20px; display: none;">
+                    <div class="big-timer" id="duelDelayTimer">0</div>
+                </div>
+
+                <!-- Таймер запоминания -->
+                <div id="duelMemTimerContainer" style="text-align: center; margin-top: 20px; display: none;">
+                    <div class="big-timer" id="duelMemTimer">0</div>
+                </div>
+            </div>
+
+            <!-- Таблица результатов дуэлей -->
+            <div class="card">
+                <h2>📋 История дуэлей</h2>
+                <table class="result-table" id="duelResultsTable">
+                    <thead>
+                        <tr>
+                            <th>Игрок 1</th>
+                            <th>Игрок 2</th>
+                            <th>Цифр</th>
+                            <th>Время (сек)</th>
+                            <th>Баллы 1</th>
+                            <th>Время ввода 1</th>
+                            <th>Баллы 2</th>
+                            <th>Время ввода 2</th>
+                            <th>Победитель</th>
+                        </tr>
+                    </thead>
+                    <tbody id="duelResultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Определяем, открыта ли страница в режиме дуэльной вкладки (по параметру в URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isDuelTab = urlParams.has('duel');
+
+        // Если это дуэльная вкладка, скрываем переключатель режимов и показываем только дуэль
+        if (isDuelTab) {
+            document.getElementById('modeSwitch').style.display = 'none';
+            document.getElementById('singleMode').style.display = 'none';
+            document.getElementById('duelMode').style.display = 'block';
+            document.title = 'Бой';
+        }
+
+        // ==================== ОБЩИЕ ФУНКЦИИ ====================
+        function generateSequence(n) {
+            let seq = '';
+            for (let i = 0; i < n; i++) seq += Math.floor(Math.random() * 10);
+            return seq;
+        }
+
+        function formatSequence(seq, groupSize) {
+            let result = '';
+            for (let i = 0; i < seq.length; i++) {
+                if (i > 0 && i % groupSize === 0) result += ' ';
+                result += seq[i];
+            }
+            return result;
+        }
+
+        // ==================== ОДИНОЧНЫЙ РЕЖИМ (не выполняем в дуэльной вкладке) ====================
+        if (!isDuelTab) {
+            (function initSingle() {
+                // Элементы
+                const attemptName = document.getElementById('singleAttemptName');
+                const digitCount = document.getElementById('singleDigitCount');
+                const memTime = document.getElementById('singleMemTime');
+                const delayTime = document.getElementById('singleDelay');
+                const groupingRadios = document.getElementsByName('singleGrouping');
+                const startBtn = document.getElementById('singleStartBtn');
+                const readyBtn = document.getElementById('singleReadyBtn');
+                const delayCard = document.getElementById('singleDelayCard');
+                const memorizeCard = document.getElementById('singleMemorizeCard');
+                const pauseCard = document.getElementById('singlePauseCard');
+                const answerCard = document.getElementById('singleAnswerCard');
+                const sequenceDisplay = document.getElementById('singleSequence');
+                const memTimerDisplay = document.getElementById('singleMemTimer');
+                const delayTimerDisplay = document.getElementById('singleDelayTimer');
+                const pauseTimerDisplay = document.getElementById('singlePauseTimer');
+                const digitsContainer = document.getElementById('singleDigitsContainer');
+                const checkBtn = document.getElementById('singleCheckBtn');
+                const resetBtn = document.getElementById('singleResetBtn');
+                const checkResult = document.getElementById('singleCheckResult');
+                const errorMessage = document.getElementById('singleErrorMessage');
+                const resultsBody = document.getElementById('singleResultsBody');
+
+                let currentSequence = '';
+                let memorizing = false;
+                let timerInterval = null;
+                let delayInterval = null;
+                let pauseInterval = null;
+                let settings = { name: '', count: 5, grouping: 1, memTime: 5, delay: 0 };
+
+                // Загрузка результатов
+                let results = JSON.parse(localStorage.getItem('singleResults')) || [];
+                function renderResults() {
+                    resultsBody.innerHTML = '';
+                    results.slice().reverse().forEach(r => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${r.name || 'Аноним'}</td>
+                            <td>${r.count}</td>
+                            <td>по ${r.grouping}</td>
+                            <td>${r.memTime}</td>
+                            <td>${r.score}</td>
+                            <td>${r.date || ''}</td>
+                        `;
+                        resultsBody.appendChild(row);
+                    });
+                }
+                renderResults();
+
+                function saveResult(score) {
+                    if (!settings.name.trim()) settings.name = 'Аноним';
+                    const result = {
+                        name: settings.name,
+                        count: settings.count,
+                        grouping: settings.grouping,
+                        memTime: settings.memTime,
+                        score: score,
+                        date: new Date().toLocaleString()
+                    };
+                    results.push(result);
+                    localStorage.setItem('singleResults', JSON.stringify(results));
+                    renderResults();
+                }
+
+                function startPauseBeforeAnswer() {
+                    memorizeCard.style.display = 'none';
+                    pauseCard.style.display = 'block';
+                    let pauseLeft = 5;
+                    pauseTimerDisplay.textContent = `⏳ ${pauseLeft} сек`;
+                    pauseInterval = setInterval(() => {
+                        pauseLeft--;
+                        pauseTimerDisplay.textContent = `⏳ ${pauseLeft} сек`;
+                        if (pauseLeft <= 0) {
+                            clearInterval(pauseInterval);
+                            pauseCard.style.display = 'none';
+                            // Создаём поля ввода
+                            digitsContainer.innerHTML = '';
+                            for (let i = 0; i < currentSequence.length; i++) {
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'digit-wrapper';
+                                const input = document.createElement('input');
+                                input.type = 'text';
+                                input.className = 'digit-input';
+                                input.maxLength = 1;
+                                input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/[^0-9]/g, ''));
+                                input.addEventListener('keyup', (e) => {
+                                    if (e.target.value.length === 1) {
+                                        const next = wrapper.nextElementSibling;
+                                        if (next) next.querySelector('input').focus();
+                                    }
+                                });
+                                wrapper.appendChild(input);
+                                digitsContainer.appendChild(wrapper);
+                            }
+                            answerCard.style.display = 'block';
+                            const firstInput = digitsContainer.querySelector('.digit-input');
+                            if (firstInput) firstInput.focus();
+                            checkResult.innerHTML = '';
+                            errorMessage.innerHTML = '';
+                            startBtn.disabled = false;
+                            readyBtn.disabled = true;
+                        }
+                    }, 1000);
+                }
+
+                function stopMemorization() {
+                    if (timerInterval) clearInterval(timerInterval);
+                    if (delayInterval) clearInterval(delayInterval);
+                    memorizing = false;
+                    startPauseBeforeAnswer();
+                }
+
+                function startMemorizationTimer(seconds) {
+                    let timeLeft = seconds;
+                    memTimerDisplay.textContent = `⏳ ${timeLeft} сек`;
+                    timerInterval = setInterval(() => {
+                        timeLeft--;
+                        memTimerDisplay.textContent = `⏳ ${timeLeft} сек`;
+                        if (timeLeft <= 0) stopMemorization();
+                    }, 1000);
+                }
+
+                function showDigits() {
+                    delayCard.style.display = 'none';
+                    memorizeCard.style.display = 'block';
+                    const formatted = formatSequence(currentSequence, settings.grouping);
+                    sequenceDisplay.textContent = formatted;
+                    startMemorizationTimer(settings.memTime);
+                    memorizing = true;
+                    startBtn.disabled = true;
+                    readyBtn.disabled = false;
+                }
+
+                function startDelay(seconds) {
+                    if (seconds <= 0) { showDigits(); return; }
+                    delayCard.style.display = 'block';
+                    let delayLeft = seconds;
+                    delayTimerDisplay.textContent = `⏳ ${delayLeft} сек`;
+                    delayInterval = setInterval(() => {
+                        delayLeft--;
+                        delayTimerDisplay.textContent = `⏳ ${delayLeft} сек`;
+                        if (delayLeft <= 0) {
+                            clearInterval(delayInterval);
+                            showDigits();
+                        }
+                    }, 1000);
+                }
+
+                startBtn.addEventListener('click', () => {
+                    const name = attemptName.value.trim();
+                    if (!name) { alert('Введите имя попытки'); return; }
+                    const count = parseInt(digitCount.value);
+                    if (count < 1 || count > 999) { alert('Количество цифр от 1 до 999'); return; }
+                    const mem = parseInt(memTime.value);
+                    if (mem < 1 || mem > 300) { alert('Время от 1 до 300'); return; }
+                    const delay = parseInt(delayTime.value);
+                    if (delay < 0 || delay > 60) { alert('Задержка от 0 до 60'); return; }
+                    let grouping = 1;
+                    for (let r of groupingRadios) if (r.checked) grouping = parseInt(r.value);
+
+                    settings = { name, count, grouping, memTime: mem, delay };
+                    currentSequence = generateSequence(count);
+
+                    memorizeCard.style.display = 'none';
+                    answerCard.style.display = 'none';
+                    pauseCard.style.display = 'none';
+                    if (timerInterval) clearInterval(timerInterval);
+                    if (delayInterval) clearInterval(delayInterval);
+                    if (pauseInterval) clearInterval(pauseInterval);
+
+                    startDelay(delay);
+                });
+
+                readyBtn.addEventListener('click', () => { if (memorizing) stopMemorization(); });
+
+                checkBtn.addEventListener('click', () => {
+                    const inputs = digitsContainer.querySelectorAll('.digit-input');
+                    let score = 0;
+                    inputs.forEach((input, index) => {
+                        const userDigit = input.value;
+                        const correctDigit = currentSequence[index];
+                        input.classList.remove('success', 'error');
+                        const wrapper = input.parentElement;
+                        const oldHint = wrapper.querySelector('.hint');
+                        if (oldHint) oldHint.remove();
+
+                        if (userDigit === correctDigit) {
+                            input.classList.add('success');
+                            score++;
+                        } else {
+                            input.classList.add('error');
+                            const hint = document.createElement('div');
+                            hint.className = 'hint';
+                            hint.textContent = correctDigit;
+                            wrapper.appendChild(hint);
+                        }
+                    });
+                    checkResult.innerHTML = `✅ Ваш результат: ${score} / ${currentSequence.length} баллов`;
+                    saveResult(score);
+                });
+
+                resetBtn.addEventListener('click', () => {
+                    if (timerInterval) clearInterval(timerInterval);
+                    if (delayInterval) clearInterval(delayInterval);
+                    if (pauseInterval) clearInterval(pauseInterval);
+                    memorizing = false;
+                    memorizeCard.style.display = 'none';
+                    delayCard.style.display = 'none';
+                    pauseCard.style.display = 'none';
+                    answerCard.style.display = 'none';
+                    startBtn.disabled = false;
+                    readyBtn.disabled = true;
+                    digitsContainer.innerHTML = '';
+                    checkResult.innerHTML = '';
+                    errorMessage.innerHTML = '';
+                });
+            })();
+        }
+
+        // ==================== РЕЖИМ ДУЭЛИ ====================
+        (function initDuel() {
+            // Элементы
+            const duelDigitCount = document.getElementById('duelDigitCount');
+            const duelMemTime = document.getElementById('duelMemTime');
+            const duelDelay = document.getElementById('duelDelay');
+            const p1NameInput = document.getElementById('p1Name');
+            const p2NameInput = document.getElementById('p2Name');
+            const p1Grouping = document.getElementById('p1Grouping');
+            const p2Grouping = document.getElementById('p2Grouping');
+            const p1Sequence = document.getElementById('p1Sequence');
+            const p2Sequence = document.getElementById('p2Sequence');
+            const p1DigitsContainer = document.getElementById('p1DigitsContainer');
+            const p2DigitsContainer = document.getElementById('p2DigitsContainer');
+            const p1StopBtn = document.getElementById('p1StopBtn');
+            const p2StopBtn = document.getElementById('p2StopBtn');
+            const p1SubmitBtn = document.getElementById('p1SubmitBtn');
+            const p2SubmitBtn = document.getElementById('p2SubmitBtn');
+            const p1TimerDisplay = document.getElementById('p1TimerDisplay');
+            const p2TimerDisplay = document.getElementById('p2TimerDisplay');
+            const p1ResultBadge = document.getElementById('p1ResultBadge');
+            const p2ResultBadge = document.getElementById('p2ResultBadge');
+            const duelDelayTimerContainer = document.getElementById('duelDelayTimerContainer');
+            const duelDelayTimer = document.getElementById('duelDelayTimer');
+            const duelMemTimerContainer = document.getElementById('duelMemTimerContainer');
+            const duelMemTimer = document.getElementById('duelMemTimer');
+            const startBtn = document.getElementById('duelStartBtn');
+            const openDuelTabBtn = document.getElementById('openDuelTabBtn');
+            const duelResultsBody = document.getElementById('duelResultsBody');
+
+            let duelState = {
+                sequence: '',
+                commonCount: 5,
+                commonMemTime: 5,
+                commonDelay: 0,
+                stage: 'setup',
+                delayInterval: null,
+                memInterval: null,
+                p1: { name: 'Игрок 1', grouping: 1, stopped: false, submitted: false, score: 0, time: 0, startTime: null, timerInterval: null },
+                p2: { name: 'Игрок 2', grouping: 1, stopped: false, submitted: false, score: 0, time: 0, startTime: null, timerInterval: null }
+            };
+
+            // Загрузка результатов дуэлей
+            let duelResults = JSON.parse(localStorage.getItem('duelResults')) || [];
+            function renderDuelResults() {
+                duelResultsBody.innerHTML = '';
+                duelResults.slice().reverse().forEach(r => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${r.p1Name || 'Игрок 1'}</td>
+                        <td>${r.p2Name || 'Игрок 2'}</td>
+                        <td>${r.count}</td>
+                        <td>${r.memTime}</td>
+                        <td>${r.p1Score}</td>
+                        <td>${r.p1Time.toFixed(2)}с</td>
+                        <td>${r.p2Score}</td>
+                        <td>${r.p2Time.toFixed(2)}с</td>
+                        <td>${r.winner}</td>
+                    `;
+                    duelResultsBody.appendChild(row);
+                });
+            }
+            renderDuelResults();
+
+            function saveDuelResult(p1Score, p1Time, p2Score, p2Time) {
+                let winner = '';
+                if (p1Score > p2Score) winner = duelState.p1.name;
+                else if (p2Score > p1Score) winner = duelState.p2.name;
+                else {
+                    if (p1Time < p2Time) winner = duelState.p1.name;
+                    else if (p2Time < p1Time) winner = duelState.p2.name;
+                    else winner = 'Ничья';
+                }
+                const result = {
+                    p1Name: duelState.p1.name,
+                    p2Name: duelState.p2.name,
+                    count: duelState.commonCount,
+                    memTime: duelState.commonMemTime,
+                    p1Score: p1Score,
+                    p1Time: p1Time,
+                    p2Score: p2Score,
+                    p2Time: p2Time,
+                    winner: winner,
+                    date: new Date().toLocaleString()
+                };
+                duelResults.push(result);
+                localStorage.setItem('duelResults', JSON.stringify(duelResults));
+                renderDuelResults();
+
+                p1ResultBadge.textContent = winner === duelState.p1.name ? '🏆 Победитель' : (winner === duelState.p2.name ? '❌' : (winner === 'Ничья' ? '🤝 Ничья' : ''));
+                p2ResultBadge.textContent = winner === duelState.p2.name ? '🏆 Победитель' : (winner === duelState.p1.name ? '❌' : (winner === 'Ничья' ? '🤝 Ничья' : ''));
+                p1ResultBadge.className = winner === duelState.p1.name ? 'result-badge winner' : (winner === duelState.p2.name ? 'result-badge loser' : (winner === 'Ничья' ? 'result-badge draw' : ''));
+                p2ResultBadge.className = winner === duelState.p2.name ? 'result-badge winner' : (winner === duelState.p1.name ? 'result-badge loser' : (winner === 'Ничья' ? 'result-badge draw' : ''));
+            }
+
+            function clearAllIntervals() {
+                if (duelState.delayInterval) clearInterval(duelState.delayInterval);
+                if (duelState.memInterval) clearInterval(duelState.memInterval);
+                if (duelState.p1.timerInterval) clearInterval(duelState.p1.timerInterval);
+                if (duelState.p2.timerInterval) clearInterval(duelState.p2.timerInterval);
+            }
+
+            function createDigitsInputs(player, sequence) {
+                const container = player === 'p1' ? p1DigitsContainer : p2DigitsContainer;
+                container.innerHTML = '';
+                for (let i = 0; i < sequence.length; i++) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'digit-wrapper';
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'digit-input';
+                    input.maxLength = 1;
+                    input.dataset.index = i;
+                    input.dataset.player = player;
+                    input.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    });
+                    input.addEventListener('keyup', (e) => {
+                        if (e.target.value.length === 1) {
+                            const next = wrapper.nextElementSibling;
+                            if (next) next.querySelector('input').focus();
+                        }
+                    });
+                    wrapper.appendChild(input);
+                    container.appendChild(wrapper);
+                }
+            }
+
+            function updatePlayerTimer(player) {
+                if (!duelState[player].submitted && duelState[player].startTime) {
+                    const elapsed = (Date.now() - duelState[player].startTime) / 1000;
+                    duelState[player].time = elapsed;
+                    const display = player === 'p1' ? p1TimerDisplay : p2TimerDisplay;
+                    display.textContent = `⏱ ${elapsed.toFixed(2)} сек`;
+                }
+            }
+
+            function checkPlayerAnswers(player) {
+                const container = player === 'p1' ? p1DigitsContainer : p2DigitsContainer;
+                const inputs = container.querySelectorAll('.digit-input');
+                let score = 0;
+                inputs.forEach((input, index) => {
+                    const userDigit = input.value;
+                    const correctDigit = duelState.sequence[index];
+                    input.classList.remove('success', 'error');
+                    const wrapper = input.parentElement;
+                    const oldHint = wrapper.querySelector('.hint');
+                    if (oldHint) oldHint.remove();
+
+                    if (userDigit === correctDigit) {
+                        input.classList.add('success');
+                        score++;
+                    } else {
+                        input.classList.add('error');
+                        const hint = document.createElement('div');
+                        hint.className = 'hint';
+                        hint.textContent = correctDigit;
+                        wrapper.appendChild(hint);
+                    }
+                });
+                duelState[player].score = score;
+                duelState[player].submitted = true;
+                if (duelState[player].timerInterval) {
+                    clearInterval(duelState[player].timerInterval);
+                    duelState[player].timerInterval = null;
+                }
+                const submitBtn = player === 'p1' ? p1SubmitBtn : p2SubmitBtn;
+                submitBtn.disabled = true;
+
+                if (duelState.p1.submitted && duelState.p2.submitted) {
+                    finishDuel();
+                }
+            }
+
+            function finishDuel() {
+                clearAllIntervals();
+                saveDuelResult(duelState.p1.score, duelState.p1.time, duelState.p2.score, duelState.p2.time);
+            }
+
+            function startInputPhase() {
+                if (duelState.stage !== 'memorize') return;
+                clearAllIntervals();
+                duelState.stage = 'input';
+
+                // Скрываем последовательности и таймеры
+                p1Sequence.style.display = 'none';
+                p2Sequence.style.display = 'none';
+                duelMemTimerContainer.style.display = 'none';
+                // Скрываем кнопки стоп
+                p1StopBtn.style.display = 'none';
+                p2StopBtn.style.display = 'none';
+
+                createDigitsInputs('p1', duelState.sequence);
+                createDigitsInputs('p2', duelState.sequence);
+
+                p1SubmitBtn.style.display = 'inline-block';
+                p2SubmitBtn.style.display = 'inline-block';
+                p1SubmitBtn.disabled = false;
+                p2SubmitBtn.disabled = false;
+
+                duelState.p1.startTime = Date.now();
+                duelState.p2.startTime = Date.now();
+                duelState.p1.timerInterval = setInterval(() => updatePlayerTimer('p1'), 100);
+                duelState.p2.timerInterval = setInterval(() => updatePlayerTimer('p2'), 100);
+            }
+
+            function startMemorizePhase() {
+                duelState.stage = 'memorize';
+                p1Sequence.style.display = 'block';
+                p2Sequence.style.display = 'block';
+                p1Sequence.textContent = formatSequence(duelState.sequence, duelState.p1.grouping);
+                p2Sequence.textContent = formatSequence(duelState.sequence, duelState.p2.grouping);
+
+                // Показываем кнопки стоп
+                p1StopBtn.style.display = 'inline-block';
+                p2StopBtn.style.display = 'inline-block';
+                p1StopBtn.disabled = false;
+                p2StopBtn.disabled = false;
+
+                // Показываем таймер запоминания
+                duelMemTimerContainer.style.display = 'block';
+                let timeLeft = duelState.commonMemTime;
+                duelMemTimer.textContent = timeLeft;
+
+                duelState.memInterval = setInterval(() => {
+                    timeLeft--;
+                    duelMemTimer.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(duelState.memInterval);
+                        startInputPhase();
+                    }
+                }, 1000);
+            }
+
+            function startDelayPhase(seconds) {
+                duelState.stage = 'delay';
+                duelDelayTimerContainer.style.display = 'block';
+                let delayLeft = seconds;
+                duelDelayTimer.textContent = delayLeft;
+
+                duelState.delayInterval = setInterval(() => {
+                    delayLeft--;
+                    duelDelayTimer.textContent = delayLeft;
+                    if (delayLeft <= 0) {
+                        clearInterval(duelState.delayInterval);
+                        duelDelayTimerContainer.style.display = 'none';
+                        startMemorizePhase();
+                    }
+                }, 1000);
+            }
+
+            // Обработчик для кнопки стоп игрока 1
+            p1StopBtn.addEventListener('click', () => {
+                if (duelState.stage === 'memorize' && !duelState.p1.stopped) {
+                    duelState.p1.stopped = true;
+                    p1StopBtn.disabled = true;
+                    // Если оба остановились, переходим к вводу
+                    if (duelState.p2.stopped) {
+                        startInputPhase();
+                    }
+                }
+            });
+
+            // Обработчик для кнопки стоп игрока 2
+            p2StopBtn.addEventListener('click', () => {
+                if (duelState.stage === 'memorize' && !duelState.p2.stopped) {
+                    duelState.p2.stopped = true;
+                    p2StopBtn.disabled = true;
+                    if (duelState.p1.stopped) {
+                        startInputPhase();
+                    }
+                }
+            });
+
+            startBtn.addEventListener('click', () => {
+                const count = parseInt(duelDigitCount.value);
+                if (count < 1 || count > 999) { alert('Количество цифр от 1 до 999'); return; }
+                const memTime = parseInt(duelMemTime.value);
+                if (memTime < 1 || memTime > 300) { alert('Время запоминания от 1 до 300'); return; }
+                const delay = parseInt(duelDelay.value);
+                if (delay < 0 || delay > 60) { alert('Задержка от 0 до 60'); return; }
+                const p1g = parseInt(p1Grouping.value);
+                const p2g = parseInt(p2Grouping.value);
+                const p1Name = p1NameInput.value.trim() || 'Игрок 1';
+                const p2Name = p2NameInput.value.trim() || 'Игрок 2';
+
+                clearAllIntervals();
+                duelState = {
+                    sequence: generateSequence(count),
+                    commonCount: count,
+                    commonMemTime: memTime,
+                    commonDelay: delay,
+                    stage: 'setup',
+                    delayInterval: null,
+                    memInterval: null,
+                    p1: { name: p1Name, grouping: p1g, stopped: false, submitted: false, score: 0, time: 0, startTime: null, timerInterval: null },
+                    p2: { name: p2Name, grouping: p2g, stopped: false, submitted: false, score: 0, time: 0, startTime: null, timerInterval: null }
+                };
+
+                // Скрываем всё
+                p1Sequence.style.display = 'none';
+                p2Sequence.style.display = 'none';
+                p1DigitsContainer.innerHTML = '';
+                p2DigitsContainer.innerHTML = '';
+                p1StopBtn.style.display = 'none';
+                p2StopBtn.style.display = 'none';
+                p1SubmitBtn.style.display = 'none';
+                p2SubmitBtn.style.display = 'none';
+                p1TimerDisplay.textContent = '';
+                p2TimerDisplay.textContent = '';
+                p1ResultBadge.textContent = '';
+                p2ResultBadge.textContent = '';
+                duelDelayTimerContainer.style.display = 'none';
+                duelMemTimerContainer.style.display = 'none';
+
+                if (delay > 0) {
+                    startDelayPhase(delay);
+                } else {
+                    startMemorizePhase();
+                }
+            });
+
+            // Открыть дуэль в новой вкладке
+            openDuelTabBtn.addEventListener('click', () => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('duel', 'true');
+                window.open(url.toString(), '_blank', 'noopener,noreferrer');
+            });
+
+         p1StopBtn.addEventListener('click', () => {
+    if (duelState.stage === 'memorize' && !duelState.p1.stopped) {
+        duelState.p1.stopped = true;
+        p1StopBtn.disabled = true;
+        p1Sequence.style.display = 'none'; // скрываем цифры игрока 1
+        if (duelState.p2.stopped) {
+            startInputPhase();
+        }
+    }
+});
+
+p2StopBtn.addEventListener('click', () => {
+    if (duelState.stage === 'memorize' && !duelState.p2.stopped) {
+        duelState.p2.stopped = true;
+        p2StopBtn.disabled = true;
+        p2Sequence.style.display = 'none'; // скрываем цифры игрока 2
+        if (duelState.p1.stopped) {
+            startInputPhase();
+        }
+    }
+});
+
+        // ==================== ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ (только не в дуэльной вкладке) ====================
+        if (!isDuelTab) {
+            const modeSingleBtn = document.getElementById('modeSingleBtn');
+            const modeDuelBtn = document.getElementById('modeDuelBtn');
+            const singleMode = document.getElementById('singleMode');
+            const duelMode = document.getElementById('duelMode');
+
+            modeSingleBtn.addEventListener('click', () => {
+                modeSingleBtn.classList.add('active');
+                modeDuelBtn.classList.remove('active');
+                singleMode.style.display = 'block';
+                duelMode.style.display = 'none';
+            });
+
+            modeDuelBtn.addEventListener('click', () => {
+                modeDuelBtn.classList.add('active');
+                modeSingleBtn.classList.remove('active');
+                singleMode.style.display = 'none';
+                duelMode.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
